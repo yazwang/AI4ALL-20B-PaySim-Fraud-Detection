@@ -1,0 +1,28 @@
+# Dataset files
+*.csv
+*.CSV
+data/*.csv
+data/*.CSV
+
+# macOS
+.DS_Store
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.*
+!.env.example
