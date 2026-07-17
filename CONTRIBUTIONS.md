@@ -1,6 +1,32 @@
 # Contributions
 
-This is a team-reviewed contribution record. The items below reflect currently confirmed work. Each team member should review their own section and add, revise, or clarify any additional contributions before final submission.
+This is a team-reviewed contribution record. The items below reflect currently confirmed work. Each team member should review their own section and add, revise, or clarify any additional contributions before final submission. Team members are listed alphabetically by last name. The order does not reflect contribution level.
+
+## Abdullahi Ali
+
+- Contributed to the Logistic Regression implementation.
+- Additional contributions: [Please add any other work you completed.]
+
+## Arjya Misra
+
+- Owned and maintained the shared project proposal document and contributed to the team proposal.
+- Contributed to the Random Forest implementation.
+- Additional contributions: [Please add any other work you completed.]
+
+## Emmanuel A. Opoku
+
+- Was assigned ownership of the Gradient Boosting section.
+- Gradient Boosting implementation status and completed work: [Please update this line.]
+- Additional contributions: [Please add any other work you completed.]
+
+## Malvee Vasan
+
+- Continued developing the initial Colab workflow created by Esther Wang by organizing, running, and testing the project code.
+- Contributed to the stratified sampling and train-validation-test split workflow.
+- Organized and consolidated the team's shared Google Drive files and project documents.
+- Helped coordinate task assignments and followed up with team members on project progress.
+- Owned and managed the shared `PaySim_DS` dataset file.
+- Additional technical contributions and implementation details: [Please review and add any other work you completed.]
 
 ## Esther Wang
 
@@ -27,32 +53,6 @@ This is a team-reviewed contribution record. The items below reflect currently c
 - Created the initial GitHub repository structure with notebook, documentation, data, app, and source-code folders.
 - Prepared project documentation, including README content, data handling notes, repository structure notes, and contribution records.
 - Combined, reviewed, and integrated separate team deliverables into the final notebook and submission-ready repository structure.
-
-## Malvee Vasan
-
-- Continued developing the initial Colab workflow created by Esther Wang by organizing, running, and testing the project code.
-- Contributed to the stratified sampling and train-validation-test split workflow.
-- Organized and consolidated the team's shared Google Drive files and project documents.
-- Helped coordinate task assignments and followed up with team members on project progress.
-- Owned and managed the shared `PaySim_DS` dataset file.
-- Additional technical contributions and implementation details: [Please review and add any other work you completed.]
-
-## Arjya Misra
-
-- Owned and maintained the shared project proposal document and contributed to the team proposal.
-- Contributed to the Random Forest implementation.
-- Additional contributions: [Please add any other work you completed.]
-
-## Abdullahi Ali
-
-- Contributed to the Logistic Regression implementation.
-- Additional contributions: [Please add any other work you completed.]
-
-## Emmanuel A. Opoku
-
-- Was assigned ownership of the Gradient Boosting section.
-- Gradient Boosting implementation status and completed work: [Please update this line.]
-- Additional contributions: [Please add any other work you completed.]
 
 ## Notes for Final Submission
 
