@@ -70,9 +70,9 @@ The cleaned final notebook currently includes:
 - Original PaySim `isFlaggedFraud` baseline
 - Logistic Regression
 - Random Forest
-- Gradient Boosting placeholder for the assigned owner
+- XGBoost
 
-Gradient Boosting has not yet been implemented in the final cleaned notebook.
+XGBoost is implemented with class-imbalance weighting, early stopping on the validation split, and a reported precision-recall curve and feature-importance plot.
 
 ## Evaluation Metrics
 
@@ -171,8 +171,7 @@ The notebook currently uses a small stratified sample first. Full-dataset traini
 
 - The full PaySim dataset is not included in this repository.
 - Current saved findings are based on a development sample, not a complete final full-dataset experiment.
-- The Random Forest result is perfect only on the current development sample containing 19 fraud cases in the test set.
-- Gradient Boosting is still a placeholder.
+- Model metrics, including the XGBoost results, are based on the development sample and should be revalidated on the full dataset.
 - Dataset source documentation must be finalized before submission.
 - A Streamlit deployment has not yet been implemented.
 

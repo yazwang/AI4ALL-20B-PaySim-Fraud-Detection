@@ -3,3 +3,8 @@ numpy
 matplotlib
 scikit-learn
 xgboost
+seaborn
+ipykernel
+nbformat
+nbclient
+nbconvert
