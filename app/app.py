@@ -5,9 +5,15 @@ Deploys the Logistic Regression and Random Forest models trained in the
 project notebook on the PaySim dataset. Gradient Boosting is intentionally
 excluded here — the notebook marks it as a placeholder, not yet implemented.
 
-Expects a file named `fraud_detection_bundle.pkl` in the same directory,
-produced by the notebook's "Export for Deployment" cell (Section 18).
+Expects a file named `fraud_detection_bundle.pkl` in the same directory.
+The bundle was generated during the model-export workflow for this project
+with scikit-learn 1.6.1; the models are pinned to that version in
+`requirements.txt` so the pickled estimators load cleanly. The notebook
+does not yet contain the export cell that produced this bundle — adding it
+for reproducibility is a tracked follow-up.
 """
+
+import os
 
 import streamlit as st
 import pandas as pd
@@ -32,7 +38,8 @@ MODEL_LABELS = {
 
 @st.cache_resource
 def load_bundle():
-    return joblib.load("fraud_detection_bundle.pkl")
+    bundle_path = os.path.join(os.path.dirname(__file__), "fraud_detection_bundle.pkl")
+    return joblib.load(bundle_path)
 
 
 bundle = load_bundle()

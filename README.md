@@ -137,6 +137,8 @@ AI4ALL-PaySim-Fraud-Detection/
 ├── data/
 │   └── README.md
 └── app/
+    ├── app.py
+    ├── fraud_detection_bundle.pkl
     └── README.md
 ```
 
@@ -174,11 +176,27 @@ The notebook currently uses a small stratified sample first. Full-dataset traini
 - The Random Forest result is perfect only on the current development sample containing 19 fraud cases in the test set.
 - Gradient Boosting is still a placeholder.
 - Dataset source documentation must be finalized before submission.
-- A Streamlit deployment has not yet been implemented.
+- The `fraud_detection_bundle.pkl` used by the Streamlit app was generated with scikit-learn 1.6.1; the export cell that produced it is not yet in the notebook, so the bundle is not yet reproducible from this repository.
 
-## Planned Streamlit Deployment
+## Streamlit Deployment
 
-A Streamlit application is planned for a future version of this project. The app may allow users to enter or upload transaction records and view model-based fraud-flagging outputs. The app is not implemented yet.
+The `app/` directory contains a Streamlit app (`app/app.py`) that deploys the
+Logistic Regression and Random Forest models on the PaySim data. It supports
+single-transaction input or CSV upload, fraud probability flagging with an
+adjustable decision threshold, dataset insights, and model-performance views
+(confusion matrices, PR curves, feature importance).
+
+To run it locally:
+
+```bash
+pip install -r requirements.txt
+streamlit run app/app.py
+```
+
+The app loads `app/fraud_detection_bundle.pkl`, which stores the exported
+models and evaluation artifacts. The bundle was generated with
+scikit-learn 1.6.1, so `requirements.txt` pins that version. Predictions are
+exploratory and based on the synthetic PaySim development sample.
 
 ## Team
 
