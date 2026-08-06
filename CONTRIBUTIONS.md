@@ -15,9 +15,12 @@ This is a team-reviewed contribution record. The items below reflect currently c
 
 ## Emmanuel A. Opoku
 
-- Was assigned ownership of the Gradient Boosting section.
-- Gradient Boosting implementation status and completed work: [Please update this line.]
-- Additional contributions: [Please add any other work you completed.]
+- Implemented and integrated the XGBoost fraud-detection model using the project’s leakage-safe engineered features.
+- Added class-imbalance handling, validation-based threshold selection, and early stopping for XGBoost.
+- Produced XGBoost evaluation outputs, including the confusion matrix, precision-recall curve, feature-importance plot, and final comparison metrics.
+- Resolved notebook execution and integration issues, restored XGBoost to the final comparison table, and aligned the Key Findings with the saved notebook outputs.
+- Pinned the required package versions and documented the macOS `libomp` requirement for running XGBoost.
+- Contributed the XGBoost work through PR #2, which was reviewed and merged into `main`.
 
 ## Malvee Vasan
 
