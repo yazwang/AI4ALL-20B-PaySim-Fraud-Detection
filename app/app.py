@@ -21,18 +21,25 @@ import pandas as pd
 import numpy as np
 import joblib
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 
 st.set_page_config(page_title="Mobile Payment Fraud Detection", layout="wide")
 
 TRANSACTION_TYPES = ["CASH_IN", "CASH_OUT", "DEBIT", "PAYMENT", "TRANSFER"]
+# Types PaySim ever actually generates fraud in -- used for the fraud-rate
+# chart, which is only meaningful for types where fraud occurs at all.
+FRAUD_PRONE_TYPES = ["CASH_OUT", "TRANSFER"]
 REQUIRED_COLS = ["step", "type", "amount", "oldbalanceOrg", "newbalanceOrig",
                   "oldbalanceDest", "newbalanceDest"]
 
-# Order reflects the notebook's Key Findings: Random Forest was the
-# strongest model on the development sample.
+# Order reflects the notebook's Key Findings on the development sample:
+# Random Forest strongest, XGBoost close behind at lower precision,
+# Logistic Regression weakest. Re-check this ordering once the notebook is
+# run on the real PaySim CSV instead of the synthetic fallback sample.
 MODEL_LABELS = {
     "random_forest": "Random Forest",
+    "xgboost": "XGBoost",
     "logistic_regression": "Logistic Regression",
 }
 
@@ -69,9 +76,19 @@ def engineer_features(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def prepare_model_input(raw_df: pd.DataFrame, model_key: str) -> pd.DataFrame:
-    """Rebuilds the exact feature matrix each model was trained on. Missing
-    columns (e.g. a 'type' category the training sample never saw) fall
-    back to the training-set mean, matching transform_tree_features /
+    """Rebuilds the exact feature matrix each model was trained on.
+
+    Two categorical-handling modes are supported, matching the notebook:
+    - `uses_type_dummies=True` (Random Forest): one-hot encode 'type', same
+      as transform_tree_features.
+    - `categorical_mode="native"` (XGBoost): keep 'type' as a single pandas
+      `category` column instead of expanding it, matching Section 13's
+      `enable_categorical=True` training. `type_categories` (saved at export
+      time) fixes the category set so a single new transaction — which by
+      definition only has one 'type' value — still gets encoded consistently
+      with what the model was trained on.
+
+    Missing columns fall back to the training-set mean, matching
     prepare_numeric_features in the notebook."""
     info = bundle["models"][model_key]
     feature_names = info["feature_names"]
@@ -85,6 +102,9 @@ def prepare_model_input(raw_df: pd.DataFrame, model_key: str) -> pd.DataFrame:
             col = f"type_{t}"
             if col not in df.columns:
                 df[col] = 0
+    elif info.get("categorical_mode") == "native":
+        type_categories = info.get("type_categories", TRANSACTION_TYPES)
+        df["type"] = pd.Categorical(df["type"], categories=type_categories)
 
     X = pd.DataFrame(index=df.index)
     for col in feature_names:
@@ -92,6 +112,14 @@ def prepare_model_input(raw_df: pd.DataFrame, model_key: str) -> pd.DataFrame:
             X[col] = df[col]
         else:
             X[col] = impute_means.get(col, 0)
+
+    # Re-apply the category dtype: assigning into a fresh DataFrame
+    # column-by-column above can silently reset it to plain object dtype,
+    # which XGBoost's enable_categorical path won't accept.
+    if info.get("categorical_mode") == "native" and "type" in X.columns:
+        type_categories = info.get("type_categories", TRANSACTION_TYPES)
+        X["type"] = pd.Categorical(X["type"], categories=type_categories)
+
     return X[feature_names]
 
 
@@ -260,13 +288,20 @@ with tab_data:
             st.pyplot(fig)
 
     with c2:
-        st.subheader("Fraud Rate by Transaction Type")
+        st.subheader("Fraudulent Transactions by Percent Risk")
         rate = eda.get("fraud_rate_by_type", {})
         if rate:
-            fig, ax = plt.subplots()
-            ax.bar(rate.keys(), rate.values(), color="darkorange")
-            ax.set_ylabel("Fraud rate")
-            plt.xticks(rotation=30)
+            # Only CASH_OUT/TRANSFER ever carry fraud in PaySim -- restricting
+            # to those two (rather than all 5 types) is what makes this chart
+            # about *risk*, not just raw fraud counts diluted across types
+            # that never see any fraud at all.
+            fraud_prone = {t: rate[t] * 100 for t in FRAUD_PRONE_TYPES if t in rate}
+            fig, ax = plt.subplots(figsize=(6, 5))
+            sns.barplot(x=list(fraud_prone.keys()), y=list(fraud_prone.values()),
+                        hue=list(fraud_prone.keys()), palette="viridis", legend=False, ax=ax)
+            ax.set_title("Fraudulent Transactions by Percent Risk")
+            ax.set_xlabel("Transaction Type")
+            ax.set_ylabel("Percent Risk")
             st.pyplot(fig)
 
     st.caption(
@@ -293,6 +328,43 @@ with tab_perf:
             pd.DataFrame(comparison).set_index("Model").round(4),
             use_container_width=True,
         )
+
+    # ============================================================
+    # ADD-ON VISUAL: Baseline vs. Best Model Callout
+    # To remove this visual: delete this entire block, from this banner
+    # down to the matching "END ADD-ON" banner below. Nothing else in the
+    # app depends on it -- it only reads bundle["model_comparison"], which
+    # is used elsewhere too and is untouched by removing this.
+    # ============================================================
+    def render_baseline_vs_best_callout():
+        comp = bundle.get("model_comparison")
+        if not comp:
+            return
+        comp_df = pd.DataFrame(comp)
+        if "Model" not in comp_df.columns or "Recall" not in comp_df.columns:
+            return
+        is_baseline = comp_df["Model"].str.contains("isFlaggedFraud", case=False, na=False)
+        baseline_rows, model_rows = comp_df[is_baseline], comp_df[~is_baseline]
+        if baseline_rows.empty or model_rows.empty:
+            return
+        baseline = baseline_rows.iloc[0]
+        sort_cols = [c for c in ["Recall", "PR-AUC / Average Precision"] if c in model_rows.columns]
+        best = model_rows.sort_values(by=sort_cols, ascending=False).iloc[0]
+
+        recall_gain = (best["Recall"] - baseline["Recall"]) * 100
+        st.success(
+            f"**Baseline vs. best model:** **{best['Model']}** caught "
+            f"**{best['Recall']:.0%}** of fraud cases, vs. **{baseline['Recall']:.0%}** "
+            f"for the original `isFlaggedFraud` rule -- a **{recall_gain:+.0f} point** "
+            f"difference in recall. False positive rate: "
+            f"{best.get('False Positive Rate', float('nan')):.4f} (model) vs. "
+            f"{baseline.get('False Positive Rate', float('nan')):.4f} (rule)."
+        )
+
+    render_baseline_vs_best_callout()
+    # ============================================================
+    # END ADD-ON: Baseline vs. Best Model Callout
+    # ============================================================
 
     st.subheader(f"Confusion Matrices — {model_label}")
     cms = bundle.get("confusion_matrices", {}).get(model_key, {})
@@ -332,7 +404,40 @@ with tab_perf:
         ax.legend(); ax.grid(alpha=0.3)
         st.pyplot(fig)
 
-    st.subheader(f"Feature Importance — {model_label}")
+    # ============================================================
+    # ADD-ON VISUAL: Threshold Tradeoff Chart
+    # To remove this visual: delete this entire block, from this banner
+    # down to the matching "END ADD-ON" banner below.
+    # Requires bundle["threshold_tables"][model_key] -- if that key is
+    # missing (e.g. an older bundle), this silently renders nothing.
+    # ============================================================
+    def render_threshold_tradeoff_chart():
+        table = bundle.get("threshold_tables", {}).get(model_key)
+        if not table:
+            return
+        st.subheader(f"Threshold Tradeoff — {model_label}")
+        st.caption(
+            "Precision, recall, and F1 across the full threshold grid the "
+            "notebook searched when picking the validation-selected "
+            "threshold -- not just the single point that got chosen."
+        )
+        tdf = pd.DataFrame(table)
+        fig, ax = plt.subplots()
+        ax.plot(tdf["Threshold"], tdf["Precision"], label="Precision", marker="o", markersize=3)
+        ax.plot(tdf["Threshold"], tdf["Recall"], label="Recall", marker="o", markersize=3)
+        ax.plot(tdf["Threshold"], tdf["F1"], label="F1", marker="o", markersize=3)
+        ax.axvline(selected_thr, color="gray", linestyle="--", alpha=0.6,
+                   label=f"Validation-selected ({selected_thr:.2f})")
+        ax.set_xlabel("Threshold"); ax.set_ylabel("Score")
+        ax.legend(); ax.grid(alpha=0.3)
+        st.pyplot(fig)
+
+    render_threshold_tradeoff_chart()
+    # ============================================================
+    # END ADD-ON: Threshold Tradeoff Chart
+    # ============================================================
+
+    st.subheader(f"{model_label} - Top Feature Importances")
     importances = bundle.get("feature_importance", {}).get(model_key)
     if importances:
         imp_df = (
@@ -341,9 +446,87 @@ with tab_perf:
             .head(15)
             .sort_values()
         )
-        fig, ax = plt.subplots(figsize=(7, 6))
+        # xlabel depends on what kind of "importance" this actually is --
+        # was previously hardcoded to describe Logistic Regression's
+        # coefficients even when showing Random Forest or XGBoost.
+        xlabel_by_model = {
+            "logistic_regression": "Importance (|coefficient|)",
+            "random_forest": "Importance (mean decrease in impurity)",
+            "xgboost": "Importance (gain)",
+        }
+        fig, ax = plt.subplots(figsize=(8, 6))
         ax.barh(imp_df.index, imp_df.values)
-        ax.set_xlabel("Importance (|coefficient| for Logistic Regression)")
+        ax.set_xlabel(xlabel_by_model.get(model_key, "Importance"))
+        plt.tight_layout()
         st.pyplot(fig)
     else:
         st.caption("Feature importance not available for this model.")
+
+    # ============================================================
+    # ADD-ON VISUAL: Engineered Feature Correlation Heatmap
+    # To remove this visual: delete this entire block, from this banner
+    # down to the matching "END ADD-ON" banner below.
+    # Requires bundle["feature_correlation"] -- missing key = no render.
+    # ============================================================
+    def render_feature_correlation_heatmap():
+        corr_info = bundle.get("feature_correlation")
+        if not corr_info:
+            return
+        st.subheader("Feature Correlation (Why These Features Were Engineered)")
+        st.caption(
+            "Computed on training data only. High correlation between a raw "
+            "column and an engineered feature built from it (e.g. amount vs. "
+            "amount_log) is expected -- it's correlations BETWEEN different "
+            "engineered features that are worth checking for redundancy."
+        )
+        columns = corr_info["columns"]
+        matrix = np.array(corr_info["matrix"])
+        fig, ax = plt.subplots(figsize=(8, 7))
+        im = ax.imshow(matrix, cmap="coolwarm", vmin=-1, vmax=1)
+        plt.colorbar(im, ax=ax, label="Correlation")
+        ax.set_xticks(range(len(columns))); ax.set_xticklabels(columns, rotation=90)
+        ax.set_yticks(range(len(columns))); ax.set_yticklabels(columns)
+        plt.tight_layout()
+        st.pyplot(fig)
+
+    render_feature_correlation_heatmap()
+    # ============================================================
+    # END ADD-ON: Engineered Feature Correlation Heatmap
+    # ============================================================
+
+    # ============================================================
+    # ADD-ON VISUAL: Amount Distribution by Fraud vs. Non-Fraud
+    # To remove this visual: delete this entire block, from this banner
+    # down to the matching "END ADD-ON" banner below.
+    # Requires bundle["amount_distribution"] -- missing key = no render.
+    # ============================================================
+    def render_amount_distribution():
+        dist = bundle.get("amount_distribution")
+        if not dist:
+            return
+        st.subheader("Transaction Amount Distribution by Class")
+        st.caption(
+            "Log-scale x-axis, each class shown as a density (not raw count) "
+            "so the much smaller fraud class stays visible next to the much "
+            "larger non-fraud class. This is the shape amount_log was "
+            "engineered to help the models handle."
+        ) 
+        edges = np.array(dist["bin_edges"])
+        centers = (edges[:-1] + edges[1:]) / 2
+        non_fraud = np.array(dist["non_fraud_counts"], dtype=float)
+        fraud = np.array(dist["fraud_counts"], dtype=float)
+        non_fraud_density = non_fraud / non_fraud.sum() if non_fraud.sum() > 0 else non_fraud
+        fraud_density = fraud / fraud.sum() if fraud.sum() > 0 else fraud
+
+        fig, ax = plt.subplots()
+        ax.plot(centers, non_fraud_density, label="Not Fraud", drawstyle="steps-mid")
+        ax.plot(centers, fraud_density, label="Fraud", drawstyle="steps-mid", color="crimson")
+        ax.set_xscale("log")
+        ax.set_xlabel("Amount (log scale)"); ax.set_ylabel("Density")
+        ax.legend()
+        st.pyplot(fig)
+
+    render_amount_distribution()
+    # ============================================================
+    # END ADD-ON: Amount Distribution by Fraud vs. Non-Fraud
+    # ============================================================
