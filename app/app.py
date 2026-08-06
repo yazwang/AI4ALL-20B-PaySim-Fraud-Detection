@@ -33,13 +33,12 @@ FRAUD_PRONE_TYPES = ["CASH_OUT", "TRANSFER"]
 REQUIRED_COLS = ["step", "type", "amount", "oldbalanceOrg", "newbalanceOrig",
                   "oldbalanceDest", "newbalanceDest"]
 
-# Order reflects the notebook's Key Findings on the development sample:
-# Random Forest strongest, XGBoost close behind at lower precision,
-# Logistic Regression weakest. Re-check this ordering once the notebook is
-# run on the real PaySim CSV instead of the synthetic fallback sample.
+# Order reflects the notebook's Key Findings on the real-PaySim development
+# sample: Random Forest was the strongest validated model, Logistic
+# Regression second. XGBoost is an experimental extension excluded from the
+# final metrics, so it is not exposed as a selectable model here.
 MODEL_LABELS = {
     "random_forest": "Random Forest",
-    "xgboost": "XGBoost",
     "logistic_regression": "Logistic Regression",
 }
 
