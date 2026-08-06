@@ -12,4 +12,6 @@ These findings are based on the saved outputs from the real PaySim development s
 
 5. The validation-selected thresholds did not change the Random Forest test results, but they did make Logistic Regression slightly less precise. For this sample, Random Forest was the strongest model because it had perfect fraud recall without increasing false positives, while Logistic Regression traded a small number of extra flags for no additional fraud cases found.
 
-Before any further redesign, ask the project owner.
+XGBoost is a boosted-tree extension under review. It is excluded from the final metrics above until it runs reproducibly on the same real-PaySim evaluation pipeline.
+
+These results are promising but are based on only 19 fraud cases in the test set; they do not prove real-world perfect performance.

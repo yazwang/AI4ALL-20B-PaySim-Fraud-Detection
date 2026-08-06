@@ -2,8 +2,9 @@
 Mobile Payment Fraud Detection — Streamlit App
 
 Deploys the Logistic Regression and Random Forest models trained in the
-project notebook on the PaySim dataset. Gradient Boosting is intentionally
-excluded here — the notebook marks it as a placeholder, not yet implemented.
+project notebook on the PaySim dataset. XGBoost is a boosted-tree extension
+under review and is excluded from the final metrics, so it is not exposed
+here.
 
 Expects a file named `fraud_detection_bundle.pkl` in the same directory.
 The bundle was generated during the model-export workflow for this project
@@ -127,8 +128,8 @@ st.sidebar.markdown("---")
 st.sidebar.caption(
     "Trained on PaySim, a **synthetic** mobile-money dataset, using a "
     "stratified development sample. Predictions here are exploratory, "
-    "not a validated production fraud system. Gradient Boosting is not "
-    "yet implemented in the notebook and isn't available here."
+    "not a validated production fraud system. XGBoost is an experimental "
+    "extension excluded from the final metrics and isn't available here."
 )
 
 
