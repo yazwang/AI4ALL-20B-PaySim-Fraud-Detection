@@ -150,6 +150,12 @@ AI4ALL-PaySim-Fraud-Detection/
 pip install -r requirements.txt
 ```
 
+macOS note: XGBoost requires the OpenMP runtime (`libomp`), which is not bundled with macOS. If `import xgboost` fails, install it first with:
+
+```bash
+brew install libomp
+```
+
 4. Place the PaySim CSV outside Git history at:
 
 ```text
