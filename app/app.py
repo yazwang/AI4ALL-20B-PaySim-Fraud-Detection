@@ -509,7 +509,7 @@ with tab_perf:
             "so the much smaller fraud class stays visible next to the much "
             "larger non-fraud class. This is the shape amount_log was "
             "engineered to help the models handle."
-        )
+        ) 
         edges = np.array(dist["bin_edges"])
         centers = (edges[:-1] + edges[1:]) / 2
         non_fraud = np.array(dist["non_fraud_counts"], dtype=float)
