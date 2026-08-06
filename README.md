@@ -32,7 +32,7 @@ The project uses the PaySim mobile-payment dataset, a synthetic dataset based on
 - `isFraud`
 - `isFlaggedFraud`
 
-The full dataset has approximately 6.3 million rows and is about 470 MB, so it is not stored in this repository. Before final submission, the team should document the authoritative dataset source and access instructions.
+The full dataset has approximately 6.3 million rows and is about 470 MB, so it is not stored in this repository. The authoritative dataset source and access instructions are documented in `data/README.md`.
 
 ## Project Workflow
 
@@ -65,14 +65,15 @@ The notebook excludes `isFraud`, `isFlaggedFraud`, raw account identifiers, and 
 
 ## Models Currently Included
 
-The cleaned final notebook currently includes:
+The final notebook includes:
 
 - Original PaySim `isFlaggedFraud` baseline
 - Logistic Regression
 - Random Forest
-- XGBoost
 
-XGBoost is implemented with class-imbalance weighting, early stopping on the validation split, and a reported precision-recall curve and feature-importance plot.
+XGBoost is a boosted-tree extension under review: it is excluded from the
+final metrics until it runs reproducibly on the same real PaySim evaluation
+pipeline.
 
 ## Evaluation Metrics
 
@@ -178,9 +179,9 @@ The notebook currently uses a small stratified sample first. Full-dataset traini
 ## Limitations
 
 - The full PaySim dataset is not included in this repository.
-- Current saved findings are based on a development sample, not a complete final full-dataset experiment.
-- Model metrics, including the XGBoost results, are based on the development sample and should be revalidated on the full dataset.
-- Dataset source documentation must be finalized before submission.
+- Saved findings are based on a 100,000-row stratified development sample, not a full 6.3-million-row experiment.
+- The test set contains only 19 fraud cases, so the near-perfect Random Forest results are promising but do not prove real-world perfect performance.
+- XGBoost is an experimental extension and is excluded from the final metrics until it runs reproducibly on the same real-PaySim evaluation pipeline.
 - The `fraud_detection_bundle.pkl` used by the Streamlit app was generated with scikit-learn 1.6.1; the export cell that produced it is not yet in the notebook, so the bundle is not yet reproducible from this repository.
 
 ## Streamlit Deployment
@@ -207,7 +208,7 @@ exploratory and based on the synthetic PaySim development sample.
 
 AI4ALL Ignite Fellowship, Group 20B.
 
-Team contribution details are drafted in `CONTRIBUTIONS.md` and should be finalized only with confirmed owner names and confirmed task history.
+Team contribution details are documented in `CONTRIBUTIONS.md`.
 
 ## Acknowledgments
 
