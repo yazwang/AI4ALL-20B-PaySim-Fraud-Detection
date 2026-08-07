@@ -13,7 +13,7 @@ project notebook.
   type from the PaySim sample.
 - **Model Performance** — model comparison table, confusion matrices at the
   default and validation-selected thresholds, precision-recall curves, and
-  feature importance for Random Forest and Logistic Regression.
+  feature importance for Random Forest, XGBoost, and Logistic Regression.
 
 ## Run
 
@@ -33,10 +33,13 @@ Run from the repository root as shown; the model bundle is loaded relative to
 
 The app loads `fraud_detection_bundle.pkl` from this directory. It contains
 the exported models and evaluation artifacts used by the UI. The bundle was
-generated with scikit-learn 1.6.1, and `requirements.txt` pins that version so
-the pickled estimators load cleanly. The notebook's export cell that produced
-this bundle is not yet in the repository (tracked as a follow-up), so the
-bundle is not currently reproducible from source.
+generated with scikit-learn 1.6.1 and xgboost 2.1.4, and `requirements.txt`
+pins those versions so the estimators load cleanly. The XGBoost model is kept
+out of the pickle entirely and loaded from its native JSON export
+(`xgboost_model.json`), which is cross-version safe and avoids the pickled-Booster
+compatibility crash seen earlier. The bundle and the XGBoost JSON are
+reproducible from the real PaySim dataset by running
+`scripts/validate_xgboost.py` from the repository root.
 
 Predictions are exploratory: the models are trained on the synthetic PaySim
 development sample and are not a validated production fraud system.

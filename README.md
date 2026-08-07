@@ -45,7 +45,7 @@ The final notebook follows this workflow:
 5. Separate the fraud target from the original PaySim rule baseline.
 6. Build a small stratified development sample.
 7. Split the sample into train, validation, and test sets.
-8. Train and evaluate Logistic Regression and Random Forest models.
+8. Train and evaluate Logistic Regression, Random Forest, and XGBoost models.
 9. Select model thresholds using validation data only.
 10. Evaluate final performance on the untouched test set.
 11. Compare model results with the original `isFlaggedFraud` baseline.
@@ -70,10 +70,11 @@ The final notebook includes:
 - Original PaySim `isFlaggedFraud` baseline
 - Logistic Regression
 - Random Forest
+- XGBoost (Gradient Boosting)
 
-XGBoost is a boosted-tree extension under review: it is excluded from the
-final metrics until it runs reproducibly on the same real PaySim evaluation
-pipeline.
+XGBoost is the team's boosted-tree extension (originally implemented by Emmanuel
+A. Opoku) and is now validated reproducibly on the same real-PaySim pipeline and
+included in the final comparison metrics.
 
 ## Evaluation Metrics
 
@@ -105,6 +106,8 @@ Random Forest achieved perfect performance on this current development sample: i
 This result should be interpreted carefully. It does not prove that Random Forest will generalize perfectly to the full PaySim dataset or to new transaction data. The result is based only on the current development sample containing 19 fraud cases in the test set.
 
 Logistic Regression found 11 of the 19 fraud cases. At the default threshold of 0.50, it flagged 12 transactions, with precision 0.916667, recall 0.578947, F1 0.709677, and PR-AUC / Average Precision 0.671791. Lowering the threshold to the validation-selected value of 0.15 did not improve recall on the test set and reduced precision.
+
+XGBoost found all 19 fraud cases on this development sample. Its validation-selected threshold converged to 0.50, so its default- and selected-threshold results are identical: precision 0.863636, recall 1.000000, F1 0.926829, and PR-AUC / Average Precision 0.992823. It flagged 22 transactions with 3 false positives, making it the second-strongest model after Random Forest.
 
 The original `isFlaggedFraud` baseline did not flag any transactions in this test set and did not catch any of the 19 fraud cases.
 
@@ -180,9 +183,8 @@ The notebook currently uses a small stratified sample first. Full-dataset traini
 
 - The full PaySim dataset is not included in this repository.
 - Saved findings are based on a 100,000-row stratified development sample, not a full 6.3-million-row experiment.
-- The test set contains only 19 fraud cases, so the near-perfect Random Forest results are promising but do not prove real-world perfect performance.
-- XGBoost is an experimental extension and is excluded from the final metrics until it runs reproducibly on the same real-PaySim evaluation pipeline.
-- The `fraud_detection_bundle.pkl` used by the Streamlit app was generated with scikit-learn 1.6.1; the export cell that produced it is not yet in the notebook, so the bundle is not yet reproducible from this repository.
+- The test set contains only 19 fraud cases, so the near-perfect Random Forest and XGBoost results are promising but do not prove real-world perfect performance.
+- The `fraud_detection_bundle.pkl` used by the Streamlit app can be regenerated from the real PaySim dataset with `scripts/validate_xgboost.py`, which reproduces the exact sample/split and trains, evaluates, and exports all three models (Logistic Regression, Random Forest, and XGBoost). The XGBoost model is serialized as a cross-version-safe native JSON file (`app/xgboost_model.json`) rather than a pickled Booster.
 
 ## Streamlit Deployment
 
@@ -191,7 +193,7 @@ The notebook currently uses a small stratified sample first. Full-dataset traini
 [Open the deployed Streamlit fraud-detection app](https://ai4all-20b-paysim-fraud-detection-mztvgddw2ckpfplbvb9vmo.streamlit.app/)
 
 The `app/` directory contains a Streamlit app (`app/app.py`) that deploys the
-Logistic Regression and Random Forest models on the PaySim data. It supports
+Logistic Regression, Random Forest, and XGBoost models on the PaySim data. It supports
 single-transaction input or CSV upload, fraud probability flagging with an
 adjustable decision threshold, dataset insights, and model-performance views
 (confusion matrices, PR curves, feature importance).
@@ -204,9 +206,11 @@ streamlit run app/app.py
 ```
 
 The app loads `app/fraud_detection_bundle.pkl`, which stores the exported
-models and evaluation artifacts. The bundle was generated with
-scikit-learn 1.6.1, so `requirements.txt` pins that version. Predictions are
-exploratory and based on the synthetic PaySim development sample.
+models and evaluation artifacts. The XGBoost model is stored separately as a
+native JSON file (`app/xgboost_model.json`) and loaded directly by the app.
+The bundle was generated with scikit-learn 1.6.1 and xgboost 2.1.4, so
+`requirements.txt` pins those versions. Predictions are exploratory and based
+on the synthetic PaySim development sample.
 
 ## Team
 
