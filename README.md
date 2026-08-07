@@ -186,6 +186,10 @@ The notebook currently uses a small stratified sample first. Full-dataset traini
 
 ## Streamlit Deployment
 
+### Live Demo
+
+[Open the deployed Streamlit fraud-detection app](https://ai4all-20b-paysim-fraud-detection-mztvgddw2ckpfplbvb9vmo.streamlit.app/)
+
 The `app/` directory contains a Streamlit app (`app/app.py`) that deploys the
 Logistic Regression and Random Forest models on the PaySim data. It supports
 single-transaction input or CSV upload, fraud probability flagging with an
