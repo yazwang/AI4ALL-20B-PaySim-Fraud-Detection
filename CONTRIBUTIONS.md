@@ -53,6 +53,8 @@ This is a team-reviewed contribution record. The items below reflect the confirm
 - Created the initial GitHub repository structure with notebook, documentation, data, app, and source-code folders.
 - Prepared project documentation, including README content, data handling notes, repository structure notes, and contribution records.
 - Combined, reviewed, and integrated separate team deliverables into the final notebook and submission-ready repository structure.
+- Revalidated and production-integrated the team's XGBoost implementation (original work by Emmanuel A. Opoku) on the authoritative real-PaySim pipeline, reproducing the exact development sample and split, training and evaluating XGBoost with the same validation-threshold methodology used for Logistic Regression and Random Forest, and restoring it to the final comparison metrics.
+- Built the reproducible export pipeline (`scripts/validate_xgboost.py`) and switched XGBoost to cross-version-safe native JSON serialization so the Streamlit app can load the model without the pickled-Booster compatibility crash; this restored XGBoost to the deployed app's model selector.
 
 ## Submission Notes
 

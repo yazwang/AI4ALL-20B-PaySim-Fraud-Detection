@@ -1,17 +1,18 @@
 """
 Mobile Payment Fraud Detection — Streamlit App
 
-Deploys the Logistic Regression and Random Forest models trained in the
-project notebook on the PaySim dataset. XGBoost is a boosted-tree extension
-under review and is excluded from the final metrics, so it is not exposed
-here.
+Deploys the Logistic Regression, Random Forest, and XGBoost models trained in
+the project notebook on the PaySim dataset. XGBoost is stored in its native
+JSON format (`xgboost_model.json`) and loaded explicitly, so it does not depend
+on cross-version Booster pickle compatibility.
 
 Expects a file named `fraud_detection_bundle.pkl` in the same directory.
-The bundle was generated during the model-export workflow for this project
-with scikit-learn 1.6.1; the models are pinned to that version in
-`requirements.txt` so the pickled estimators load cleanly. The notebook
-does not yet contain the export cell that produced this bundle — adding it
-for reproducibility is a tracked follow-up.
+The bundle is generated reproducibly by `scripts/validate_xgboost.py` on the
+authoritative real-PaySim pipeline with scikit-learn 1.6.1; the models are
+pinned to that version in `requirements.txt` so the pickled estimators load
+cleanly. The XGBoost model itself lives in `xgboost_model.json` (native
+serialization, produced with xgboost==2.1.4 and loaded under the same pinned
+version).
 """
 
 import os
@@ -20,6 +21,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import xgboost as xgb
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
@@ -34,11 +36,12 @@ REQUIRED_COLS = ["step", "type", "amount", "oldbalanceOrg", "newbalanceOrig",
                   "oldbalanceDest", "newbalanceDest"]
 
 # Order reflects the notebook's Key Findings on the real-PaySim development
-# sample: Random Forest was the strongest validated model, Logistic
-# Regression second. XGBoost is an experimental extension excluded from the
-# final metrics, so it is not exposed as a selectable model here.
+# sample: Random Forest was the strongest validated model, XGBoost second
+# (perfect recall with slightly lower precision than RF), Logistic Regression
+# third.
 MODEL_LABELS = {
     "random_forest": "Random Forest",
+    "xgboost": "XGBoost",
     "logistic_regression": "Logistic Regression",
 }
 
@@ -46,7 +49,16 @@ MODEL_LABELS = {
 @st.cache_resource
 def load_bundle():
     bundle_path = os.path.join(os.path.dirname(__file__), "fraud_detection_bundle.pkl")
-    return joblib.load(bundle_path)
+    bundle = joblib.load(bundle_path)
+    if "xgboost" in bundle.get("models", {}):
+        # XGBoost is serialized in its native JSON format (not pickled) to
+        # avoid cross-version Booster incompatibility. Load it explicitly.
+        xgboost_model = xgb.XGBClassifier(enable_categorical=True)
+        xgboost_model.load_model(
+            os.path.join(os.path.dirname(__file__), "xgboost_model.json")
+        )
+        bundle["models"]["xgboost"]["model"] = xgboost_model
+    return bundle
 
 
 bundle = load_bundle()
@@ -155,8 +167,7 @@ st.sidebar.markdown("---")
 st.sidebar.caption(
     "Trained on PaySim, a **synthetic** mobile-money dataset, using a "
     "stratified development sample. Predictions here are exploratory, "
-    "not a validated production fraud system. XGBoost is an experimental "
-    "extension excluded from the final metrics and isn't available here."
+    "not a validated production fraud system."
 )
 
 
