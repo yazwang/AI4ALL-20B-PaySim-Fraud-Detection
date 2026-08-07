@@ -17,6 +17,10 @@ project notebook.
 
 ## Run
 
+Live demo: [open the deployed Streamlit app](https://ai4all-20b-paysim-fraud-detection-mztvgddw2ckpfplbvb9vmo.streamlit.app/)
+
+To run locally:
+
 ```bash
 pip install -r requirements.txt
 streamlit run app/app.py
