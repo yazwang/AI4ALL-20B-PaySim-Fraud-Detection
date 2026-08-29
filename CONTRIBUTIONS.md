@@ -13,7 +13,7 @@ This is a team-reviewed contribution record. The items below reflect the confirm
 - Built and iteratively developed the deployed Streamlit fraud-detection app across multiple notebook revisions, including model selection, single-transaction and CSV-batch prediction, an adjustable decision threshold, dataset-insights visualizations, and a model-performance view.
 - Added XGBoost as a third selectable model in the app, including a distinct preprocessing path for its native categorical handling (separate from Random Forest's one-hot encoding).
 - Wrote the notebook's missing model-export cell that produces fraud_detection_bundle.pkl, closing a previously tracked gap and enabling reproducible deployment of all three models.
-Fixed a mislabeled feature-importance axis in the app that incorrectly described Random Forest's and XGBoost's importance values using Logistic Regression's coefficient wording.
+- Fixed a mislabeled feature-importance axis in the app that incorrectly described Random Forest's and XGBoost's importance values using Logistic Regression's coefficient wording.
 
 ## Emmanuel A. Opoku
 
